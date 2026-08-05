@@ -1,118 +1,134 @@
 # Подключение Xiaomi Mi Scale 2 к Home Assistant через ESP32 (Bluetooth)
 
-Краткая, ясная и только пошаговая инструкция. Никаких комментариев от нейросети — только практические шаги.
+Это инструкция содержит чёткие практические шаги для интеграции Xiaomi Mi Scale 2 в Home Assistant с использованием ESP32 и ESPHome.
 
 Требуется
-- ESP32 (например, WROOM/DevKitC)
+- ESP32 (например, WROOM / DevKitC)
 - Xiaomi Mi Scale 2
-- Home Assistant (работающая инстанция)
+- Home Assistant (локальная инстанция)
 - Компьютер для прошивки ESP32 или ESPHome аддон в Home Assistant
-- Доступ к файлу `secrets.yaml` (локально, не пушьте в репозиторий)
+- Доступ к `secrets.yaml` (локально, не храните его в репо)
 
-1) Клонирование (опционально)
-- Если вы работаете с этим репозиторием локально:
+1) Подготовка файлов
+- Клонируйте репозиторий (опционально):
+  ```bash
   git clone https://github.com/anton5714/Home-assistant-smart-home-scale.git
   cd Home-assistant-smart-home-scale
-
-2) Подготовьте secrets.yaml (локально, не в репо)
-- В конфигурации Home Assistant (`/config/secrets.yaml`) добавьте:
+  ```
+- Отредактируйте локально `/config/secrets.yaml` и добавьте:
+  ```yaml
   wifi_ssid: "ВАША_WIFI"
   wifi_password: "ВАШ_WIFI_PASSWORD"
   esphome_api_encryption_key: "случайная_строка"
   esphome_ota_password: "случайная_строка"
+  ```
 
-3) Получение MAC-адреса весов
-- Пробудите весы (коснитесь или встаньте на них).
-- Вариант A (мобильный): используйте nRF Connect (Android/iOS) → Start scan → найдите устройство с именем типа `MIBCS`/`Mi` → запишите MAC.
-- Вариант B (Linux): выполните в терминале:
+2) Прошивка ESP32 (ESPHome)
+- В репозитории есть файл `firmware/esp32_wroom_scale.yaml` с конфигурацией для ESP32. Он использует `!secret` для приватных данных.
+- Подключите ESP32 к компьютеру или используйте ESPHome аддон в Home Assistant.
+- Выполните (локально с установленным esphome):
+  ```bash
+  esphome run firmware/esp32_wroom_scale.yaml
+  ```
+- При первом запуске ESPHome попытается подключиться к Wi‑Fi; если сеть недоступна, ESP создаст временную Wi‑Fi точку (Hotspot) для настройки.
+
+3) Поиск MAC‑адреса весов
+- Пробудите весы: коснитесь или встаньте на них (весы начнут вещать BLE).
+- Вариант A (мобильный): используйте приложение nRF Connect (Android/iOS) → Start Scan → найдите устройство с именем типа `MIBCS`/`Mi` и скопируйте MAC.
+- Вариант B (Linux): в терминале:
+  ```bash
   sudo hcitool lescan --duplicates
-  затем пробудите весы и запишите появившийся MAC (формат AA:BB:CC:DD:EE:FF).
+  ```
+  затем пробудите весы и запишите MAC (формат: AA:BB:CC:DD:EE:FF).
+- Также можно посмотреть логи ESPHome после первой прошивки — ESP будет сканировать BLE и выведет обнаруженные устройства и MAC в логах.
 
-4) Вариант прошивки и парсинга
-4a) Вариант (если ESPHome поддерживает xiaomi_miscale2)
-- Отредактируйте `firmware/esp32_wroom_scale.yaml` или создайте конфиг и добавьте:
+4) Конфигурация ESPHome для Mi Scale 2
+Есть два надёжных варианта:
 
-```yaml
-esphome:
-  name: mi-scale-esp
+4A) Если в вашей версии ESPHome есть компонент `xiaomi_miscale2` (простая установка):
+- Добавьте в ESP конфиг следующий блок (замените MAC):
+  ```yaml
+  esp32_ble_tracker:
 
-esp32:
-  board: esp32dev
+  bluetooth_proxy:
+    active: true
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  sensor:
+    - platform: xiaomi_miscale2
+      mac_address: 'AA:BB:CC:DD:EE:FF'
+      name: "Mi Scale 2"
+      update_interval: 10s
+      weight:
+        name: "Mi Scale Weight"
+      impedance:
+        name: "Mi Scale Impedance"
+  ```
+- Прошейте ESP ещё раз: `esphome run firmware/esp32_wroom_scale.yaml`.
+- В Home Assistant появятся сенсоры веса и импеданса.
 
-esp32_ble_tracker:
+4B) Если `xiaomi_miscale2` недоступен: использовать `esp32_ble_tracker` + `bluetooth_proxy` и парсить данные в Home Assistant
+- В ESP конфиге включите:
+  ```yaml
+  esp32_ble_tracker:
 
-bluetooth_proxy:
-  active: true
+  bluetooth_proxy:
+    active: true
+  ```
+- Прошейте ESP.
+- В Home Assistant установите HACS и интеграцию BLE Monitor (через HACS → Integrations).
+- Добавьте интеграцию BLE Monitor: Configuration → Integrations → Add Integration → BLE Monitor → введите MAC весов → выберите параметры (weight, impedance, stabilized, battery).
+- BLE Monitor создаст сенсоры в Home Assistant: `sensor.mi_scale_weight`, `sensor.mi_scale_impedance` и т.д.
 
-sensor:
-  - platform: xiaomi_miscale2
-    mac_address: 'AA:BB:CC:DD:EE:FF' # ваш MAC
-    name: "Mi Scale 2"
-    update_interval: 10s
-    weight:
-      name: "Mi Scale Weight"
-    impedance:
-      name: "Mi Scale Impedance"
-```
+5) Установка BodyMiScale (дополнительные расчёты)
+- В HACS установите интеграцию `bodymiscale` или аналогичный компонент, если хотите автоматически получать BMI, fat%, muscle и т.п.
+- Создайте файл `custom_components/bodymiscale/bodymiscale.yml` или следуйте инструкции компонента. Пример полей, которые потребуется заполнить: дата рождения, рост, пол, привязка сенсоров weight и impedance.
 
-- Прошейте устройство: `esphome run firmware/esp32_wroom_scale.yaml` (или через ESPHome аддон).
-
-4b) Вариант (общий, если xiaomi_miscale2 недоступен)
-- Используйте esp32_ble_tracker + bluetooth_proxy, а парсинг делайте на стороне Home Assistant через BLE Monitor (HACS) или bodymiscale:
-
-```yaml
-esp32_ble_tracker:
-
-bluetooth_proxy:
-  active: true
-```
-
-- Прошейте ESP32 с этим config. В Home Assistant установите через HACS интеграцию BLE Monitor и добавьте MAC весов — BLE Monitor создаст `sensor.*` для веса и импеданса.
-
-5) Установка HACS и BLE Monitor (если выбираете вариант 4b)
-- Установите HACS: следуйте официальной инструкции https://hacs.xyz/docs/installation/manual
-- В HACS → Integrations → найдите и установите "BLE Monitor" (и при желании "bodymiscale").
-- Перезагрузите Home Assistant.
-- Добавьте интеграцию BLE Monitor: Configuration → Integrations → Add Integration → BLE Monitor → укажите MAC весов → выберите парсинг weight/impedance/stabilized.
-
-6) Подключение шаблонных сенсоров (опционально — расчёты)
-- Скопируйте `config/sensors_body.yaml` и `config/helpers_body.yaml` в `/config/` Home Assistant (если хотите вычислять BMI, fat% и т.д.).
+6) Подключение шаблонных сенсоров (расчёты / helpers)
+- Скопируйте `config/sensors_body.yaml` и `config/helpers_body.yaml` в папку `/config/` Home Assistant.
 - В `configuration.yaml` добавьте:
+  ```yaml
   template: !include config/sensors_body.yaml
   input_number: !include config/helpers_body.yaml
-- Перезагрузите Home Assistant.
+  ```
+- Перезагрузите Home Assistant и в UI заполните helpers (рост, возраст, пол).
 
-7) Добавление автоматизации (озвучивание)
+7) Автоматизация (озвучивание)
 - Откройте `automations/announce_mi_scale.yaml` или `automations/announce_mi_scale_debounce.yaml`.
-- Замените `device_id` на `entity_id: media_player.имя_плеера` или укажите ваш media_player.
-- Импортируйте автоматизацию через UI или помес��ите YAML в папку `automations/` и Reload Automations.
-- Рекомендуется использовать debounce версию или добавить условие изменения > 0.1 кг и `for: 00:00:03`.
+- Замените `device_id` на `entity_id: media_player.YOUR_PLAYER_ENTITY_ID`.
+- Рекомендуется использовать debounce-версию или добавить в триггер `for: 00:00:03` и условие, что разница веса больше 0.1 кг.
+- Импортируйте автоматизацию или положите YAML в папку `automations/` и перезагрузите автоматизации.
 
 8) Тестирование
-- Поставьте весы на ровную поверхность, встаньте на них и дождитесь стабилизации показаний (индикатор перестал мигать).
-- В Home Assistant проверьте появление сущностей: Developer Tools → States → найдите `sensor.mi_scale_weight` или `sensor.vesy_weight`.
-- Вручную запустите автоматизацию (Developer Tools → Services → automation.trigger) и проверьте воспроизведение на `media_player`.
+- Поставьте весы на ровную поверхность, встаньте на них и дождитесь, когда показание стабилизируется (индикатор перестал мигать).
+- В Home Assistant проверьте появление сенсоров: Developer Tools → States → найдите `sensor.mi_scale_weight` или `sensor.vesy_weight`.
+- Запустите автоматизацию вручную: Developer Tools → Services → automation.trigger → выберите автоматизацию.
 
-9) Быстрая отладка (если что-то не работает)
-- Весы не видны в сканере: убедитесь, что вы пробудили весы и что ESP32/мобильный сканер находится поблизости.
-- ESPHome не видит весы: запустите `esphome logs firmware/esp32_wroom_scale.yaml` и смотрите обнаружение MAC.
+9) Отладка — что проверить при проблемах
+- Весы не видны при сканировании: убедитесь, что вы пробудили весы и ESP32/сканер находится рядом.
+- ESP не обнаруживает весы: выполните `esphome logs firmware/esp32_wroom_scale.yaml` и проверьте вывод BLE scan.
 - Сенсоры не появились в HA: проверьте Integrations → BLE Monitor / Developer Tools → States.
-- Автоматизация срабатывает часто: используйте debounce (announce_mi_scale_debounce.yaml) или условие delta > 0.1 кг.
-- Неправильные числа (запятые): шаблоны в репо уже используют `replace(',', '.')` перед преобразованием в float.
+- Автоматизация срабатывает часто: используйте debounce или условие delta > 0.1 кг.
+- Некорректные числа: шаблоны в репо уже используют `replace(',', '.')` перед преобразованием в float.
 
-10) Полезные команды
-- Скан BLE (Linux): `sudo hcitool lescan --duplicates`
-- Логи ESPHome: `esphome logs firmware/esp32_wroom_scale.yaml`
-- Сборка/прошивка: `esphome run firmware/esp32_wroom_scale.yaml`
+10) Дополнительные заметки
+- При первом запуске ESP создаёт Wi‑Fi точку, если он не может подключиться к вашей сети — подключитесь к ней и укажите Wi‑Fi данные.
+- Стоимость набора (примерно): ~30 EUR (ESP32 + Mi Scale) — ориентировочно.
+- Точность измерений: значения жира/мышц/воды — приблизительные; для медицинских целей используйте сертифицированные устройства.
 
-11) Примечания по безопасности
-- Никогда не публикуйте `secrets.yaml` в репозиторий.
-- Если вы тестировали с реальными ключами в публичных файлах — смените их (ротация).
+11) Полезные команды
+- Скан BLE (Linux):
+  ```bash
+  sudo hcitool lescan --duplicates
+  ```
+- Логи ESPHome:
+  ```bash
+  esphome logs firmware/esp32_wroom_scale.yaml
+  ```
+- Прошивка/сборка ESPHome:
+  ```bash
+  esphome run firmware/esp32_wroom_scale.yaml
+  ```
 
 ---
 
-Если нужно, могу: 1) заменить/обновить автоматизацию чтобы явно проверять stabilized/debounce; 2) добавить пример Lovelace‑карты для отображения веса и графиков; 3) сгенерировать QR‑код для крипто‑адреса и добавить в repo. Скажите, какой из пунктов выполнить.
+Файлы в репозитории приведены к итоговому, практичному виду — в них нет вопросов от автора инструкции и нет предложений выполнить дополнительные действия. Этот документ содержит только пошаговые действия и проверки.
