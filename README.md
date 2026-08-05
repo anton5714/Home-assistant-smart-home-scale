@@ -18,6 +18,8 @@
   ```yaml
   template: !include home-assistant/sensors/body_analysis.yaml
   ```
+  или `config/sensors_body.yaml`
+  
 - Создайте helpers (через UI):
   - input_number.user_height (рост в см)
   - input_number.user_age (возраст)
