@@ -1,0 +1,28 @@
+# Автоматизация: озвучивание результатов с медиа-плеера
+# Использует сенсор веса и (опционально) шаблонные сенсоры для вывода текста.
+# Перед использованием замените media_player на вашу сущность (entity_id).
+
+alias: Announce Mi Scale Results
+description: "Озвучивает результаты с весов и отправляет текст в навык Алисы"
+trigger:
+  - platform: state
+    entity_id: sensor.mi_scale_weight
+    for: '00:00:03'
+condition:
+  - condition: template
+    value_template: "{{ (trigger.to_state.state | float(0) - trigger.from_state.state | float(0)) | abs > 0.1 }}"
+action:
+  - service: tts.google_translate_say
+    target:
+      entity_id: "{{ states('sensor.alice_media_player') | default(secrets.alice_media_player_entity_id) }}"
+    data:
+      message: >
+        {% set w = states('sensor.mi_scale_weight') | replace(',','.') | float(0) %}
+        {% set bmi = states('sensor.body_bmi') | float(0) %}
+        Ваш текущий вес {{ w }} кг. Индекс массы тела {{ bmi }}.
+  - delay: '00:00:28'
+  - service: rest_command.send_text_to_alice
+    data:
+      text: "Пожалуйста, дай краткий совет по текущему составу тела."
+
+mode: single
