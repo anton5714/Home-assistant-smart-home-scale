@@ -29,9 +29,6 @@
 - В `secrets.yaml` укажите `alice_media_player_entity_id` (например `media_player.yandex_station`).
 - Если вы используете навык Алисы с командой `sendText`, настройте rest_command (пример внизу README) — иначе автоматизация будет использовать TTS через ваш media_player.
 
-Примечания и безопасность
-- Не публикуйте `secrets.yaml` в публичных репозиториях. Используйте `secrets.yaml.example` как шаблон.
-- В репозитории все чувствительные значения заменены на `!secret` или placeholders.
 
 ---
 
