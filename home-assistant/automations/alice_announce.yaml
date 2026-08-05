@@ -1,0 +1,24 @@
+alias: Alice — Announce Mi Scale
+description: "Озвучивает текущий вес и ИМТ через media_player Алисы (tts) и отправляет текст в навык Алисы (rest_command)"
+trigger:
+  - platform: state
+    entity_id: sensor.mi_scale_weight
+    for: '00:00:03'
+condition:
+  - condition: template
+    value_template: "{{ (trigger.to_state.state | float(0) - trigger.from_state.state | float(0)) | abs > 0.1 }}"
+action:
+  - service: tts.google_translate_say
+    target:
+      entity_id: !secret alice_media_player_entity_id
+    data:
+      message: >
+        {% set w = states('sensor.mi_scale_weight') | replace(',','.') | float(0) %}
+        {% set bmi = states('sensor.body_bmi') | float(0) %}
+        Ваш текущий вес {{ w }} кг. ИМТ {{ bmi }}.
+  - delay: '00:00:20'
+  - service: rest_command.send_text_to_alice
+    data:
+      text: >
+        Проанализируй мои фитнес‑метрики и дай одну короткую рекомендацию. Вес {{ states('sensor.mi_scale_weight') }}, ИМТ {{ states('sensor.body_bmi') }}.
+mode: single

@@ -1,5 +1,5 @@
-# Ignore secrets and local files
+# Игнорировать локальные секреты и редакторы
 secrets.yaml
-.env
 .vscode/
+.env
 __pycache__/

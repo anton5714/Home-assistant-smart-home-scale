@@ -1,24 +1,19 @@
-# Шаблонные сенсоры для расчёта состава тела (прим��р)
-# Краткие пояснения перед шаблонами:
-# - Все входные значения приходят от весов и helpers (рост, возраст, пол).
-# - Формулы приближённые; используйте их только для ориентировочных значений.
-# - В этом файле приведены готовые шаблоны, которые можно подключить через
-#   configuration.yaml: template: !include home-assistant/sensors/body_analysis.yaml
+# Шаблонные sensors для расчётов состава тела
+# Фай��л готов для копирования: вставьте в configuration.yaml как template: !include home-assistant/sensors/body_analysis.yaml
+
+# Ожидаемые входные сущности:
+# - sensor.mi_scale_weight  (кг)
+# - sensor.mi_scale_impedance (ом или значение от весов)
+# - input_number.user_height (см)
+# - input_number.user_age
+# - input_select.user_gender ('male' или 'female')
 
 sensors:
-  # Вес — должен создаваться интеграцией (BLE Monitor / ESPHome xiaomi_miscale2)
-  # Вставьте свой реальный entity_id, если он отличается.
-  - name: "mi_scale_weight"
-    state: "{{ states('sensor.mi_scale_weight') | default('0') }}"
-    unit_of_measurement: 'kg'
-    availability: "{{ states('sensor.mi_scale_weight') not in ['unknown','unavailable'] }}"
-
-  # BMI — индекс массы тела: вес(кг) / (рост(м))^2
   - name: "body_bmi"
     state: >
       {% set weight = states('sensor.mi_scale_weight') | replace(',','.') | float(0) %}
       {% set height_cm = states('input_number.user_height') | float(0) %}
-      {% set height_m = height_cm / 100 if height_cm > 0 else 0 %}
+      {% set height_m = (height_cm / 100) if height_cm > 0 else 0 %}
       {% if height_m > 0 and weight > 0 %}
         {{ (weight / (height_m * height_m)) | round(1) }}
       {% else %}
@@ -27,25 +22,19 @@ sensors:
     unit_of_measurement: ''
     friendly_name: 'BMI (ИМТ)'
 
-  # Пример приближённой оценки процента жира.
-  # Формулы BIA (bioelectrical impedance) сложнее; здесь простой пример для ориентира.
   - name: "body_fat_percentage"
     state: >
       {% set weight = states('sensor.mi_scale_weight') | replace(',','.') | float(0) %}
       {% set impedance = states('sensor.mi_scale_impedance') | replace(',','.') | float(0) %}
-      {% set age = states('input_number.user_age') | int(0) %}
-      {% set male = is_state('input_select.user_gender','male') %}
       {% if weight == 0 or impedance == 0 %}
         unknown
       {% else %}
-        {# Простая приблизительная формула — для точных расчётов используйте bodymiscale/custom компонент #}
-        {% set fat = 0.1 * weight %}
-        {{ fat | round(1) }}
+        {# Простая приближённая оценка: замените на более точный алгоритм при желании #}
+        {{ (weight * 0.1) | round(1) }}
       {% endif %}
     unit_of_measurement: '%'
     friendly_name: 'Процент жира (прибл.)'
 
-  # Пример расчёта мышечной массы — ориентировочно
   - name: "muscle_mass"
     state: >
       {% set weight = states('sensor.mi_scale_weight') | replace(',','.') | float(0) %}
@@ -56,8 +45,3 @@ sensors:
       {% endif %}
     unit_of_measurement: 'kg'
     friendly_name: 'Мышечная масса (прибл.)'
-
-# Helpers (input_number / input_select) — добавьте в Home Assistant через UI или YAML
-# input_number.user_height — рост в см
-# input_number.user_age — возраст
-# input_select.user_gender — 'male' или 'female'
