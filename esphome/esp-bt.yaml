@@ -18,8 +18,10 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  # Если хотите использовать статический IP — раскомментируйте и заполните в secrets.yaml
-  # fast_connect: true
+  fast_connect: true
+  reboot_timeout: 15min
+  # Для использования статического IP раскомментируйте блок ниже и заполните
+  # значения в secrets.yaml (esphome_static_ip, esphome_gateway, esphome_subnet)
   # manual_ip:
   #   static_ip: !secret esphome_static_ip
   #   gateway: !secret esphome_gateway
@@ -35,6 +37,12 @@ bluetooth_proxy:
 time:
   - platform: sntp
     id: esptime
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 4
+        then:
+          - button.press: restart_esp
 
 sensor:
   - platform: uptime
@@ -43,17 +51,7 @@ sensor:
     name: "ESP WiFi Signal"
     update_interval: 60s
 
-# Пример компонента для поддержки Mi Scale 2, если он доступен в вашей версии ESPHome.
-# Замените MAC на обнаруженный при сканировании.
-# Если этот компонент недоступен, используйте только esp32_ble_tracker + bluetooth_proxy
-# и настройте парсер на стороне Home Assistant (BLE Monitor / bodymiscale).
-#
-# sensor:
-#   - platform: xiaomi_miscale2
-#     mac_address: 'AA:BB:CC:DD:EE:FF' # Замените на MAC ваших весов
-#     name: "Mi Scale 2"
-#     update_interval: 10s
-#     weight:
-#       name: "Mi Scale Weight"
-#     impedance:
-#       name: "Mi Scale Impedance"
+button:
+  - platform: restart
+    id: restart_esp
+    name: "Restart ESP"

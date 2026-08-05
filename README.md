@@ -14,6 +14,7 @@
   - `wifi_ssid`, `wifi_password` — ваши Wi‑Fi данные
   - `esphome_api_encryption_key`, `esphome_ota_password` — безопасные строки
   - `alice_media_player_entity_id` — entity_id медиаплеера (например `media_player.yandex_station`)
+  - (Опционально) `esphome_static_ip`, `esphome_gateway`, `esphome_subnet` — если хотите использовать статический IP
 
 2) Прошивка ESP32 (ESPHome)
 - Подключите ESP32 к компьютеру или используйте ESPHome аддон.
@@ -22,6 +23,38 @@
   esphome run esphome/esp-bt.yaml
   ```
 - При первом запуске ESP создаст временную точку доступа, если не сможет подключиться к Wi‑Fi.
+
+- Пример конфигурации ESPHome (sanitized). Секреты и реальные IP вынесены в secrets.yaml:
+
+```yaml
+# esphome/esp-bt.yaml (excerpt)
+esphome:
+  name: esp-bt
+
+esp32:
+  board: esp32dev
+
+api:
+  encryption:
+    key: !secret esphome_api_encryption_key
+
+ota:
+  password: !secret esphome_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # manual_ip: optional (use !secret esphome_static_ip / esphome_gateway / esphome_subnet)
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+bluetooth_proxy:
+  active: true
+```
+
+- (Иллюстрация) Скриншот конфигурации ESPHome можно добавить в README: `images/esp32-esphome-config.png` — файл placeholder создан; вы можете позже заменить его оригинальным изображением.
 
 3) Найти MAC весов
 - Пробудите весы (коснитесь или встаньте на них).
@@ -57,7 +90,7 @@
 - Весы не видны: пробудите физически; убедитесь, что ESP и весы в зоне действия BLE.
 - ESP не видит: `esphome logs esphome/esp-bt.yaml`.
 - Сенсоры не появились: проверьте Integrations → BLE Monitor / Developer Tools → States.
-- Автоматизация срабатывает часто: используйте `for: '00:00:03'` и условие delta > 0.1 кг.
+- Автоматизация срабатывает часто: используйте `for: '00:00:03'` и условие delta > 0.1 кг (в автоматизации это уже установлено).
 
 9) Команды
 ```bash
@@ -68,4 +101,4 @@ esphome logs esphome/esp-bt.yaml
 
 ---
 
-Если у вас другие имена сенсоров (например `sensor.vesy_weight`), замените их в `home-assistant/sensors/body_analysis.yaml` и в автоматизации на ваши имена (Developer Tools → States покажет текущие entity_id).
+Если позже вы пришлёте оригинальный PNG, я могу заменить placeholder `images/esp32-esphome-config.png` на реальную картинку и замазать видимые секреты. Файл конфигурации esphome/esp-bt.yaml в репо уже приведён в безопасном виде (все секреты через !secret).
