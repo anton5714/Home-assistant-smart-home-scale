@@ -1,6 +1,6 @@
 # Умный дом: Xiaomi Mi Scale 2 → ESP32 → Алиса
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-💖-ff69b4)](https://github.com/sponsors/anton5714)
+[![Sponsor](https://img.shields.io/badge/Sponsor-💖-ff69b4)](https://github.com/sponsors/anton5714) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-ffdd57)](https://buymeacoffee.com/anton5714)
 
 ESP32 считывает данные с Xiaomi Mi Scale 2 по Bluetooth и передаёт их в Home Assistant; колонка с Алисой (через интеграцию в Home Assistant) озвучивает показатели и даёт короткие рекомендации.
 
@@ -63,14 +63,19 @@ Quick Start
 - automations/ — YAML автоматизаций для Home Assistant (рабочая и debounce версии)
 - config/ — шаблонные сенсоры для анализа тела (`sensors_body.yaml`, `sensors_body_improved.yaml`) и helpers (`helpers_body.yaml`)
 - firmware/ — пример ESPHome-конфига `esp32_wroom_scale.yaml` (все секреты = !secret)
-- docs/ — дополнительные инструкции (`mi-scale-setup.md`, `firmware-secrets.md`, `sensors-setup.md`)
-- DONATE.md — информация о том, как поддержать проект
+- docs/ — дополнительные инструкции (`mi-scale-setup.md`, `firmware-secrets.md`, `sensors-setup.md`, `buymeacoffee-setup.md`)
+- DONATE.md — информация о том, как поддержать проект (включая крипто адреса)
 - LICENSE — MIT
 
 Secrets и безопасность
 - Никогда не пушьте реальных паролей и ключей. Добавьте `secrets.yaml` в `.gitignore`.
 - Все публичные конфиги в `firmware/` используют `!secret`.
 - Если ранее вы публиковали ключи — смените их (ротация).
+
+Криптовалюта (USDT TRC20 / Tron)
+USDT (TRC20 / Tron): TTEGWGEhATMxwJj1VZdnYYBapBuK3T3Yjp
+
+Пожалуйста, убедитесь, что отправляете токены именно в сети TRON (TRC20), иначе средства могут быть потеряны.
 
 Прошивка ESP32 (коротко)
 - Рекомендуется ESPHome (удобно взаимодействует с Home Assistant).
@@ -95,7 +100,10 @@ GitHub Pages
 
 Поддержать проект:
 - GitHub Sponsors: https://github.com/sponsors/anton5714
-- Buy Me a Coffee / Patreon / Ko-fi / PayPal — добавьте ссылки в DONATE.md
+- Buy Me a Coffee: https://buymeacoffee.com/anton5714
+- Ko-fi: https://ko-fi.com/ВАШ_АККАУНТ
+- Patreon: https://patreon.com/ВАШ_АККАУНТ
+- PayPal / YooMoney: [ваша ссылка]
 
 Contributing
 - Открывайте issues с подробным описанием проблемы/фичи.
