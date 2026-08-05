@@ -1,0 +1,55 @@
+esphome:
+  name: esp-bt
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: !secret esphome_api_encryption_key
+
+ota:
+  password: !secret esphome_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  reboot_timeout: 15min
+  manual_ip:
+    static_ip: 192.168.0.147
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+time:
+  - platform: sntp
+    id: esptime
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 4
+        then:
+          - button.press: restart_esp
+
+sensor:
+  - platform: uptime
+    name: "ESP Uptime"
+  - platform: wifi_signal
+    name: "ESP WiFi Signal"
+    update_interval: 60s
+
+button:
+  - platform: restart
+    id: restart_esp
+    name: "Restart ESP"
