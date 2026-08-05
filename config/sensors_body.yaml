@@ -1,0 +1,90 @@
+# Template sensors for body analysis (add to Home Assistant configuration)
+# Save this file as config/sensors_body.yaml and include it using:
+# template: !include config/sensors_body.yaml
+
+template:
+  - sensor:
+      - name: "Безжировая масса"
+        unique_id: lean_body_mass
+        unit_of_measurement: "кг"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ (weight * 0.692) | round(1) if weight > 0 else 67.2 }}
+      
+      - name: "Процент жира"
+        unique_id: body_fat_percentage
+        unit_of_measurement: "%"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {% if weight > 0 %}
+            {% set fat = 0.308 * 100 %}
+            {{ fat | round(1) }}
+          {% else %}
+            {{ 30.8 }}
+          {% endif %}
+      
+      - name: "Масса жира"
+        unique_id: fat_mass_kg
+        unit_of_measurement: "кг"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ (weight * 0.308) | round(1) if weight > 0 else 29.9 }}
+      
+      - name: "Мышечная масса"
+        unique_id: muscle_mass_real
+        unit_of_measurement: "кг"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {% if weight > 0 %}
+            {% set muscle = weight * 0.656 %}
+            {{ muscle | round(1) }}
+          {% else %}
+            {{ 63.9 }}
+          {% endif %}
+      
+      - name: "Вода в организме"
+        unique_id: body_water
+        unit_of_measurement: "%"
+        state: >
+          {% set impedance = states('sensor.vesy_impedance') | replace(',', '.') | float(414) %}
+          {{ (73.2 - (impedance * 0.05)) | round(1) }}
+      
+      - name: "Индекс массы тела"
+        unique_id: body_mass_index
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ (weight / 3.24) | round(1) if weight > 0 else 30.0 }}
+      
+      - name: "Висцеральный жир"
+        unique_id: visceral_fat
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ 13 if weight >= 80 else 5 }}
+      
+      - name: "Основной обмен"
+        unique_id: basal_metabolic_rate
+        unit_of_measurement: "ккал"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ ((10 * weight) + 1125 - 155) | round(0) if weight > 0 else 1952 }}
+      
+      - name: "Костная масса"
+        unique_id: bone_mass
+        unit_of_measurement: "кг"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {{ (weight * 0.0353) | round(2) if weight > 0 else 3.43 }}
+      
+      - name: "Прогресс Антона"
+        unique_id: anton_weight_progress
+        unit_of_measurement: "%"
+        state: >
+          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+          {% if weight >= 81 and weight <= 97.2 %}
+            {% set progress = ((97.2 - weight) / (97.2 - 81) * 100) %}
+            {{ progress | round(1) }}
+          {% elif weight < 81 %}
+            {{ 100.0 }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
