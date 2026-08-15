@@ -1,20 +1,18 @@
-# Home Assistant template sensor for BMI.
-# Include this file with:
+# Template sensor for BMI.
+# In configuration.yaml:
 # template: !include config/sensors_body.yaml
 #
 # Expected entities:
 #   sensor.vesy_weight — weight in kg
 #   input_number.user_height — height in cm
 
-template:
-  - sensor:
-      - name: "Индекс массы тела"
-        unique_id: body_mass_index
-        state: >-
-          {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
-          {% set height_cm = states('input_number.user_height') | replace(',', '.') | float(0) %}
-          {% set height_m = height_cm / 100 %}
-          {{ (weight / (height_m * height_m)) | round(1) if weight > 0 and height_m > 0 else none }}
-        unit_of_measurement: "kg/m²"
-        device_class: weight
-        state_class: measurement
+- sensor:
+    - name: "Индекс массы тела"
+      unique_id: body_mass_index
+      state: >-
+        {% set weight = states('sensor.vesy_weight') | replace(',', '.') | float(0) %}
+        {% set height_cm = states('input_number.user_height') | replace(',', '.') | float(0) %}
+        {% set height_m = height_cm / 100 %}
+        {{ (weight / (height_m * height_m)) | round(1) if weight > 0 and height_m > 0 else none }}
+      unit_of_measurement: "kg/m²"
+      state_class: measurement
