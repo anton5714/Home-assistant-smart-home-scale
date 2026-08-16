@@ -1,4 +1,4 @@
-# Optional Home Assistant template sensors.
+# Optional Home Assistant template sensor.
 # Include with: template: !include home-assistant/body_metrics.yaml
 # Create input_number.user_height_cm in Home Assistant first.
 
@@ -13,20 +13,6 @@
         {% set height_m = height_cm / 100 %}
         {% if weight > 0 and height_m > 0 %}
           {{ (weight / (height_m * height_m)) | round(1) }}
-        {% else %}
-          unknown
-        {% endif %}
-
-    - name: "Mi Scale Weight Change"
-      unique_id: mi_scale_weight_change
-      icon: mdi:scale-bathroom
-      unit_of_measurement: "kg"
-      state_class: measurement
-      state: >-
-        {% set current = states('sensor.mi_scale_weight') | float(0) %}
-        {% set previous = states('input_number.mi_scale_reference_weight') | float(0) %}
-        {% if current > 0 and previous > 0 %}
-          {{ (current - previous) | round(2) }}
         {% else %}
           unknown
         {% endif %}
