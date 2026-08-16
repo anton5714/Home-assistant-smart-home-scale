@@ -2,7 +2,8 @@
 
 Подключение **Xiaomi Mi Scale / Mi Scale 2** к Home Assistant через ESP32 и Bluetooth Low Energy.
 
-Репозиторий специально очищен от дублирующихся конфигураций и сомнительных расчётов состава тела. Основной путь — штатный компонент ESPHome `xiaomi_miscale`.
+Вот так это работает:
+https://youtube.com/shorts/LJl9GLgwjTk?si=N0dysm-EmuSxpZ7c
 
 ## Что работает
 
