@@ -1,5 +1,10 @@
+substitutions:
+  device_name: mi-scale-bridge
+  friendly_name: Mi Scale Bridge
+
 esphome:
-  name: esp-bt
+  name: ${device_name}
+  friendly_name: ${friendly_name}
 
 esp32:
   board: esp32dev
@@ -13,7 +18,8 @@ api:
     key: !secret esphome_api_encryption_key
 
 ota:
-  password: !secret esphome_ota_password
+  - platform: esphome
+    password: !secret esphome_ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -21,7 +27,6 @@ wifi:
   fast_connect: true
   reboot_timeout: 15min
 
-# Поддержка BLE для прокси/сканирования
 esp32_ble_tracker:
   scan_parameters:
     active: true
@@ -29,28 +34,37 @@ esp32_ble_tracker:
 bluetooth_proxy:
   active: true
 
-# Если ваша версия ESPHome поддерживает nативный компонент для Mi Scale 2,
-# раскомментируйте и вставьте MAC ваших весов в поле mac_address:
-# sensor:
-#   - platform: xiaomi_miscale2
-#     mac_address: 'AA:BB:CC:DD:EE:FF'  # <- замените на MAC ваших весов
-#     name: "Mi Scale 2"
-#     update_interval: 10s
-#     weight:
-#       name: "Mi Scale Weight"
-#     impedance:
-#       name: "Mi Scale Impedance"
-
-# Если xiaomi_miscale2 не доступен, используйте Bluetooth proxy + BLE Monitor в Home Assistant
-
+# Xiaomi Mi Scale / Mi Scale 2.
+# Mi Scale 2 can expose both weight and impedance.
+# Replace the MAC address with your scale's Bluetooth MAC.
 sensor:
+  - platform: xiaomi_miscale
+    mac_address: "AA:BB:CC:DD:EE:FF"
+    weight:
+      name: "Mi Scale Weight"
+      id: mi_scale_weight
+      unit_of_measurement: "kg"
+      device_class: weight
+      state_class: measurement
+      accuracy_decimals: 2
+    impedance:
+      name: "Mi Scale Impedance"
+      id: mi_scale_impedance
+      unit_of_measurement: "Ω"
+      state_class: measurement
+      accuracy_decimals: 0
+    clear_impedance: true
+
   - platform: uptime
     name: "ESP Uptime"
+    entity_category: diagnostic
+
   - platform: wifi_signal
     name: "ESP WiFi Signal"
     update_interval: 60s
+    entity_category: diagnostic
 
 button:
   - platform: restart
-    id: restart_esp
     name: "Restart ESP"
+    entity_category: config
