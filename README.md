@@ -1,44 +1,93 @@
-# Home Assistant — Mi Scale
-Максимально простая, рабочая и безопасная структура — только нужные файлы, чтобы любой пользователь мог быстро подключить Xiaomi Mi Scale 2 к Home Assistant через ESP32 и получить два основных сенсора: вес и импеданс, а также шаблонные датчики (ИМТ, пример %жира) и простую автоматизацию для озвучивания через Алису.
+# Xiaomi Mi Scale → Home Assistant
 
-Вот так это работает: https://youtube.com/shorts/LJl9GLgwjTk?feature=share
+Подключение **Xiaomi Mi Scale / Mi Scale 2** к Home Assistant через ESP32 и Bluetooth Low Energy.
 
-Всё, что нужно сделать (3 шага)
+Репозиторий специально очищен от дублирующихся конфигураций и сомнительных расчётов состава тела. Основной путь — штатный компонент ESPHome `xiaomi_miscale`.
 
-1) Прошить ESP32
-- Откройте `esphome/esp-bt.yaml` и заполните `!secret wifi_ssid`/`!secret wifi_password` в своём `secrets.yaml` (см. `secrets.yaml.example`).
-- Если ваш ESPHome поддерживает `xiaomi_miscale2`, вставьте MAC ваших весов в блок `sensor: platform: xiaomi_miscale2` (см. комментарий в файле). Иначе используйте `esp32_ble_tracker`+`bluetooth_proxy` и парсер на стороне Home Assistant (BLE Monitor).
-- Прошивка:
-  ```bash
-  esphome run esphome/esp-bt.yaml
-  ```
+## Что работает
 
-2) Добавить шаблонные датчики в Home Assistant
-- Скопируйте файл `home-assistant/sensors/body_analysis.yaml` в вашу конфигурацию (например в `/config/home-assistant/sensors/body_analysis.yaml`) и подключите его в `configuration.yaml`:
-  ```yaml
-  template: !include home-assistant/sensors/body_analysis.yaml
-  ```
-  или `config/sensors_body.yaml`
-  
-- Создайте helpers (через UI):
-  - input_number.user_height (рост в см)
-  - input_number.user_age (возраст)
-  - input_select.user_gender (male / female)
-- После этого у вас появятся шаблонные сенсоры: `sensor.body_bmi`, `sensor.body_fat_percentage`, `sensor.muscle_mass`.
+- ⚖️ вес в кг;
+- 🧬 импеданс в Ω на Mi Scale 2;
+- 📡 BLE через ESP32;
+- 🏠 Home Assistant API;
+- 🔄 Bluetooth proxy;
+- 📊 опциональный BMI в Home Assistant.
 
-3) Добавить автоматизацию (озвучивание через Алису)
-- Положите `home-assistant/automations/alice_announce.yaml` в папку `automations/` (или импортируйте через UI).
-- В `secrets.yaml` укажите `alice_media_player_entity_id` (например `media_player.yandex_station`).
-- Если вы используете навык Алисы с командой `sendText`, настройте rest_command (пример внизу README) — иначе автоматизация будет использовать TTS через ваш media_player.
+ESPHome принимает данные от весов пассивно через BLE; сопряжение с весами не требуется. Mi Scale 2 поддерживает передачу веса и импеданса.
 
+## Быстрый старт
 
----
+### 1. ESP32
 
-Файлы в репозитории (итог)
-- esphome/esp-bt.yaml — ESPHome конфиг (sanitized, с комментарием куда вставить MAC)
-- home-assistant/sensors/body_analysis.yaml — шаблонные template sensors (BMI, fat%, muscle)
-- home-assistant/automations/alice_announce.yaml — простая автоматизация озвучивания
-- secrets.yaml.example — пример секретов
-- .gitignore — игнор secrets.yaml
-- README.md — вы сейчас читаете минимальную one‑page инструкцию
-- LICENSE — MIT
+Используйте `esphome/esp-bt.yaml`.
+
+В `secrets.yaml` добавьте значения из `secrets.yaml.example`.
+
+### 2. MAC-адрес весов
+
+В `esphome/esp-bt.yaml` замените:
+
+```yaml
+mac_address: "AA:BB:CC:DD:EE:FF"
+```
+
+на MAC вашей Mi Scale.
+
+После этого прошейте ESP32 через ESPHome:
+
+```bash
+esphome run esphome/esp-bt.yaml
+```
+
+### 3. Home Assistant
+
+После подключения ESP32 интеграция ESPHome создаст сенсоры:
+
+- `sensor.mi_scale_weight`
+- `sensor.mi_scale_impedance` — для Mi Scale 2
+
+### 4. BMI — опционально
+
+Если нужен BMI, создайте в Home Assistant helper `input_number.user_height_cm` и подключите:
+
+```yaml
+template: !include home-assistant/body_metrics.yaml
+```
+
+BMI рассчитывается только из веса и роста. Проценты жира, мышечная и костная масса намеренно не подставляются приблизительными формулами: такие значения лучше брать непосредственно из данных весов или специализированной интеграции.
+
+## Структура
+
+```text
+.
+├── esphome/
+│   └── esp-bt.yaml              # основной ESP32 + Mi Scale BLE конфиг
+├── home-assistant/
+│   └── body_metrics.yaml        # опциональный BMI
+├── docs/
+│   ├── mi-scale-setup.md
+│   ├── firmware-secrets.md
+│   └── sensors-setup.md
+├── secrets.yaml.example
+├── CONTRIBUTING.md
+├── LICENSE
+└── README.md
+```
+
+## Безопасность
+
+Никогда не коммитьте настоящий `secrets.yaml`, Wi-Fi пароль или OTA/API ключи.
+
+Не используйте статический IP, если он не нужен: конфигурация ESP32 должна работать в разных сетях без изменения YAML.
+
+## Примечание про Mi Scale 2
+
+В актуальном ESPHome компонент называется `xiaomi_miscale`; старый пример с `xiaomi_miscale2` больше не нужен.
+
+## Источник
+
+Документация ESPHome: https://esphome.io/components/sensor/xiaomi_miscale/
+
+## License
+
+MIT
