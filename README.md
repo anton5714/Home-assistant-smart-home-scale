@@ -1,93 +1,155 @@
 # Xiaomi Mi Scale → Home Assistant
 
-Подключение **Xiaomi Mi Scale / Mi Scale 2** к Home Assistant через ESP32 и Bluetooth Low Energy.
+Connect a Xiaomi Mi Scale or Mi Scale 2 to Home Assistant using an ESP32 and Bluetooth Low Energy.
 
-Вот так это работает:
-https://youtube.com/shorts/LJl9GLgwjTk?si=N0dysm-EmuSxpZ7c
+[![ESPHome](https://img.shields.io/badge/ESPHome-supported-blue)](https://esphome.io/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-supported-blue)](https://www.home-assistant.io/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## Что работает
+## What you get
 
-- ⚖️ вес в кг;
-- 🧬 импеданс в Ω на Mi Scale 2;
-- 📡 BLE через ESP32;
-- 🏠 Home Assistant API;
-- 🔄 Bluetooth proxy;
-- 📊 опциональный BMI в Home Assistant.
+- Weight sensor in kg
+- Impedance sensor on Mi Scale 2
+- Passive BLE reception — no pairing with the scale
+- ESPHome API connection to Home Assistant
+- Optional ESP32 Bluetooth Proxy
+- Optional BMI sensor
 
-ESPHome принимает данные от весов пассивно через BLE; сопряжение с весами не требуется. Mi Scale 2 поддерживает передачу веса и импеданса.
+ESPHome's `xiaomi_miscale` component listens to BLE advertisement packets passively, so the scale does not need to be paired. Mi Scale 2 can provide both weight and impedance. citeturn0search0
 
-## Быстрый старт
+## Architecture
 
-### 1. ESP32
+```text
+Xiaomi Mi Scale
+      │
+      │ Bluetooth LE
+      ▼
+    ESP32
+      │
+      │ ESPHome API
+      ▼
+Home Assistant
+      │
+      ├── Weight
+      ├── Impedance
+      └── Optional BMI
+```
 
-Используйте `esphome/esp-bt.yaml`.
+## Requirements
 
-В `secrets.yaml` добавьте значения из `secrets.yaml.example`.
+- Xiaomi Mi Scale or Mi Scale 2
+- ESP32 board with BLE support
+- Home Assistant
+- ESPHome
 
-### 2. MAC-адрес весов
+## Quick start
 
-В `esphome/esp-bt.yaml` замените:
+### 1. Prepare secrets
+
+Copy `secrets.yaml.example` to your local ESPHome secrets file and fill in your Wi-Fi/API/OTA values.
+
+**Never commit the real `secrets.yaml`.**
+
+### 2. Set the scale MAC address
+
+Edit `esphome/esp-bt.yaml`:
 
 ```yaml
 mac_address: "AA:BB:CC:DD:EE:FF"
 ```
 
-на MAC вашей Mi Scale.
+Replace the placeholder with your scale's Bluetooth MAC address.
 
-После этого прошейте ESP32 через ESPHome:
+### 3. Flash the ESP32
 
 ```bash
 esphome run esphome/esp-bt.yaml
 ```
 
-### 3. Home Assistant
+### 4. Add ESPHome to Home Assistant
 
-После подключения ESP32 интеграция ESPHome создаст сенсоры:
+After the device connects, Home Assistant should expose:
 
-- `sensor.mi_scale_weight`
-- `sensor.mi_scale_impedance` — для Mi Scale 2
+- `Mi Scale Weight`
+- `Mi Scale Impedance` — Mi Scale 2 only
+- ESP uptime
+- Wi-Fi signal
+- Restart button
 
-### 4. BMI — опционально
+The exact entity IDs can differ depending on the device name and Home Assistant configuration.
 
-Если нужен BMI, создайте в Home Assistant helper `input_number.user_height_cm` и подключите:
+## Mi Scale vs Mi Scale 2
 
-```yaml
-template: !include home-assistant/body_metrics.yaml
+| Feature | Mi Scale | Mi Scale 2 |
+|---|---:|---:|
+| Weight | ✅ | ✅ |
+| Impedance | — | ✅ |
+| BLE passive reception | ✅ | ✅ |
+| Pairing required | ❌ | ❌ |
+
+ESPHome documents the supported Xiaomi models and the impedance limitation for Mi Scale 2. citeturn0search0
+
+## Optional BMI
+
+The repository includes an optional Home Assistant template sensor in `home-assistant/body_metrics.yaml`.
+
+Create an `input_number.user_height_cm` helper and include the template in your Home Assistant configuration.
+
+BMI is calculated from weight and height only. The project intentionally does **not** invent body-fat, muscle-mass or bone-mass values using arbitrary coefficients.
+
+## Troubleshooting
+
+### Weight does not appear
+
+1. Confirm the MAC address.
+2. Confirm the ESP32 is close enough to the scale.
+3. Check ESPHome logs.
+4. Step on the scale and wait for a stable measurement.
+5. Make sure `esp32_ble_tracker` is enabled.
+
+### Impedance is missing
+
+Impedance is supported by Mi Scale 2, not the original Mi Scale. ESPHome also provides `clear_impedance` to avoid retaining an older impedance value when a new reading does not contain impedance. citeturn0search0
+
+### ESP32 connects but Home Assistant has no entities
+
+Check the ESPHome API connection and inspect the device logs. The repository uses encrypted ESPHome API credentials from `secrets.yaml`.
+
+## Development
+
+The repository includes GitHub Actions that build the ESPHome configuration on pushes and pull requests. This catches invalid ESPHome configuration before changes are merged.
+
+You can also validate locally:
+
+```bash
+esphome config esphome/esp-bt.yaml
 ```
 
-BMI рассчитывается только из веса и роста. Проценты жира, мышечная и костная масса намеренно не подставляются приблизительными формулами: такие значения лучше брать непосредственно из данных весов или специализированной интеграции.
-
-## Структура
+## Project structure
 
 ```text
 .
+├── .github/
+│   └── workflows/
+│       └── esphome.yml
 ├── esphome/
-│   └── esp-bt.yaml              # основной ESP32 + Mi Scale BLE конфиг
+│   └── esp-bt.yaml
 ├── home-assistant/
-│   └── body_metrics.yaml        # опциональный BMI
+│   └── body_metrics.yaml
 ├── docs/
-│   ├── mi-scale-setup.md
 │   ├── firmware-secrets.md
+│   ├── mi-scale-setup.md
 │   └── sensors-setup.md
 ├── secrets.yaml.example
 ├── CONTRIBUTING.md
+├── SECURITY.md
 ├── LICENSE
 └── README.md
 ```
 
-## Безопасность
+## Security
 
-Никогда не коммитьте настоящий `secrets.yaml`, Wi-Fi пароль или OTA/API ключи.
-
-Не используйте статический IP, если он не нужен: конфигурация ESP32 должна работать в разных сетях без изменения YAML.
-
-## Примечание про Mi Scale 2
-
-В актуальном ESPHome компонент называется `xiaomi_miscale`; старый пример с `xiaomi_miscale2` больше не нужен.
-
-## Источник
-
-Документация ESPHome: https://esphome.io/components/sensor/xiaomi_miscale/
+Do not commit passwords, API keys, tokens or private credentials. See `SECURITY.md` for the security policy.
 
 ## License
 
