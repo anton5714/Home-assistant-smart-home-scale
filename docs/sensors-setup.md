@@ -1,28 +1,26 @@
-# Как подключить template sensors для анализа тела
+# BMI в Home Assistant
 
-Файл: `config/sensors_body.yaml`
+Проект намеренно считает только BMI из веса и роста. Не используйте самодельные коэффициенты для жира, воды или мышечной массы: такие оценки зависят от модели весов и алгоритма производителя.
 
-Шаги для включения в Home Assistant:
+## Подключение
 
-1) Скопируйте `config/sensors_body.yaml` в папку `config/` вашего репозитория (или в директорию конфигурации Home Assistant).
+Файл: `home-assistant/body_metrics.yaml`
 
-2) В `configuration.yaml` добавьте строку (если у вас Home Assistant Core / OS с поддержкой include):
+Добавьте в `configuration.yaml`:
 
 ```yaml
-template: !include config/sensors_body.yaml
+template: !include home-assistant/body_metrics.yaml
 ```
 
-Если у вас уже есть блок `template:` в `configuration.yaml`, объедините определения или импортируйте отдельный файл с помощью `!include`.
+Создайте Helper `input_number.user_height_cm` с ростом в сантиметрах.
 
-3) Перезагрузите Home Assistant или выполните "Reload Template Entities" через Configuration → Server Controls → Reload Template Entities.
+После изменения конфигурации проверьте её и перезагрузите Template entities в Home Assistant.
 
-Проверка:
-- После перезагрузки появятся сенсоры с указанными `unique_id` и именами.
-- Проверьте значения в Developer Tools → States и в логах.
+## Что появится
 
-Замечания и рекомендации:
-- Некоторые формулы (например, BMI) используют константы. Если у вас есть рост в метрах, замените `weight / 3.24` на `weight / (height * height)` и передавайте `height` как input_number или sensor.
-- Убедитесь, что `sensor.vesy_weight` и `sensor.vesy_impedance` реально существуют и обновляются. В шаблонах уже используется `replace(',', '.')` для безопасного преобразования.
-- По возможности используйте `unit_of_measurement` (как указано) — это улучшит отображение в интерфейсе.
-- Если нужно — могу добавить автоматическое картографирование названий entity (alias / mapping) и проверку наличия сенсоров.
+- `sensor.mi_scale_bmi` — BMI;
+- `sensor.mi_scale_weight_change` — изменение относительно заданного reference weight.
 
+## Важно
+
+Если ваши entity IDs отличаются от примеров, измените их в `home-assistant/body_metrics.yaml`.
