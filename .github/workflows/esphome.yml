@@ -15,9 +15,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create CI secrets
+        run: |
+          cat > esphome/secrets.yaml <<'EOF'
+          wifi_ssid: "ci"
+          wifi_password: "ci-password"
+          esphome_api_encryption_key: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          esphome_ota_password: "ci-password"
+          EOF
+
       - name: Validate ESPHome configuration
         uses: esphome/build-action@v8.0.0
         with:
           yaml-file: esphome/esp-bt.yaml
           version: latest
-          skip-checks: false
