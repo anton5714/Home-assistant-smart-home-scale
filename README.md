@@ -10,11 +10,13 @@ Connect a Xiaomi Mi Scale or Mi Scale 2 to Home Assistant using an ESP32 and Blu
 
 Want to see how the setup works before installing it?
 
-**Watch the short demo:**
+[![Watch the Xiaomi Mi Scale → Home Assistant demo](https://img.youtube.com/vi/LJl9GLgwjTk/hqdefault.jpg)](https://www.youtube.com/shorts/LJl9GLgwjTk)
 
-[▶️ Xiaomi Mi Scale → Home Assistant — demo on YouTube](https://www.youtube.com/shorts/LJl9GLgwjTk)
+**▶️ [Watch the demo on YouTube](https://www.youtube.com/shorts/LJl9GLgwjTk)**
 
 The video shows the real setup and how the scale sends measurements to Home Assistant through ESP32 + Bluetooth.
+
+> **Prefer a dedicated demo page?** See [docs/demo.md](docs/demo.md).
 
 ## What you get
 
@@ -145,6 +147,7 @@ esphome config esphome/esp-bt.yaml
 ├── home-assistant/
 │   └── body_metrics.yaml
 ├── docs/
+│   ├── demo.md
 │   ├── firmware-secrets.md
 │   ├── mi-scale-setup.md
 │   └── sensors-setup.md
