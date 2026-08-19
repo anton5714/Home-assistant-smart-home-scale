@@ -35,8 +35,9 @@ bluetooth_proxy:
   active: true
 
 # Xiaomi Mi Scale / Mi Scale 2.
-# Mi Scale 2 can expose both weight and impedance.
-# Replace the MAC address with your scale's Bluetooth MAC.
+# The scale broadcasts measurements over BLE; pairing is not required.
+# Mi Scale 2 can provide both weight and impedance.
+# Replace the placeholder with the Bluetooth MAC address of your scale.
 sensor:
   - platform: xiaomi_miscale
     mac_address: "AA:BB:CC:DD:EE:FF"
