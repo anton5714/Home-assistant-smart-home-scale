@@ -6,6 +6,16 @@ Connect a Xiaomi Mi Scale or Mi Scale 2 to Home Assistant using an ESP32 and Blu
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-supported-blue)](https://www.home-assistant.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+## 🎥 See it in action
+
+Want to see how the setup works before installing it?
+
+**Watch the short demo:**
+
+[▶️ Xiaomi Mi Scale → Home Assistant — demo on YouTube](https://www.youtube.com/shorts/LJl9GLgwjTk)
+
+The video shows the real setup and how the scale sends measurements to Home Assistant through ESP32 + Bluetooth.
+
 ## What you get
 
 - Weight sensor in kg
@@ -15,7 +25,7 @@ Connect a Xiaomi Mi Scale or Mi Scale 2 to Home Assistant using an ESP32 and Blu
 - Optional ESP32 Bluetooth Proxy
 - Optional BMI sensor
 
-ESPHome's `xiaomi_miscale` component listens to BLE advertisement packets passively, so the scale does not need to be paired. Mi Scale 2 can provide both weight and impedance. citeturn0search0
+ESPHome's `xiaomi_miscale` component listens to BLE advertisement packets passively, so the scale does not need to be paired. Mi Scale 2 can provide both weight and impedance.
 
 ## Architecture
 
@@ -87,8 +97,6 @@ The exact entity IDs can differ depending on the device name and Home Assistant 
 | BLE passive reception | ✅ | ✅ |
 | Pairing required | ❌ | ❌ |
 
-ESPHome documents the supported Xiaomi models and the impedance limitation for Mi Scale 2. citeturn0search0
-
 ## Optional BMI
 
 The repository includes an optional Home Assistant template sensor in `home-assistant/body_metrics.yaml`.
@@ -109,7 +117,7 @@ BMI is calculated from weight and height only. The project intentionally does **
 
 ### Impedance is missing
 
-Impedance is supported by Mi Scale 2, not the original Mi Scale. ESPHome also provides `clear_impedance` to avoid retaining an older impedance value when a new reading does not contain impedance. citeturn0search0
+Impedance is supported by Mi Scale 2, not the original Mi Scale.
 
 ### ESP32 connects but Home Assistant has no entities
 
@@ -117,7 +125,7 @@ Check the ESPHome API connection and inspect the device logs. The repository use
 
 ## Development
 
-The repository includes GitHub Actions that build the ESPHome configuration on pushes and pull requests. This catches invalid ESPHome configuration before changes are merged.
+The repository includes GitHub Actions that build the ESPHome configuration on pushes and pull requests.
 
 You can also validate locally:
 
