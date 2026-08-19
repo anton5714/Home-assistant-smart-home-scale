@@ -18,8 +18,7 @@ template: !include home-assistant/body_metrics.yaml
 
 ## Что появится
 
-- `sensor.mi_scale_bmi` — BMI;
-- `sensor.mi_scale_weight_change` — изменение относительно заданного reference weight.
+- `sensor.mi_scale_bmi` — BMI, рассчитанный по текущему весу и росту.
 
 ## Важно
 
